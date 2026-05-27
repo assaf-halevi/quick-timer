@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#141917" />
+  <title>QUICK TIMER</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    :root {
+      --bg: #141917;
+      --surface: #1a201d;
+      --surface-soft: #202823;
+      --line: rgba(242, 238, 230, 0.09);
+      --text: #f2eee6;
+      --muted: #9caaa1;
+      --accent: #9bb28f;
+      --accent-soft: rgba(155, 178, 143, 0.14);
+      --danger: #d7887b;
+      --danger-soft: rgba(215, 136, 123, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 50% 12%, rgba(155, 178, 143, 0.11), transparent 37%),
+        var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(392px, 100%);
+      min-height: min(720px, calc(100svh - 40px));
+      background: linear-gradient(160deg, rgba(30, 37, 33, 0.94), rgba(20, 25, 23, 0.98));
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      padding: 27px 24px 22px;
+      box-shadow: 0 28px 72px rgba(3, 7, 5, 0.3);
+      text-align: center;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      direction: ltr;
+      gap: 11px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+    }
+
+    .brand-mark {
+      width: 25px;
+      height: 25px;
+      border: 2px solid var(--text);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .brand-mark::before {
+      content: "";
+      width: 3px;
+      height: 9px;
+      border-radius: 4px;
+      background: var(--text);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -100%) rotate(25deg);
+      transform-origin: 50% 100%;
+    }
+
+    #saveDefaultBtn {
+      width: auto;
+      padding: 10px 17px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 999px;
+      margin: 0;
+      white-space: nowrap;
+      background: var(--accent-soft);
+      border: 1px solid rgba(155, 178, 143, 0.23);
+      color: #c8d4c2;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 34px 0 0;
+      min-height: 19px;
+      letter-spacing: 0.04em;
+    }
+
+    .dial {
+      min-height: 250px;
+      margin: 11px auto 22px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      width: min(266px, 73vw);
+      aspect-ratio: 1;
+    }
+
+    .dial::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 10deg,
+        rgba(242, 238, 230, 0.12) 0deg 340deg,
+        transparent 340deg 360deg
+      );
+      -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 14px),
+        #000 calc(100% - 13px),
+        #000 calc(100% - 12px),
+        transparent calc(100% - 11px)
+      );
+      mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 14px),
+        #000 calc(100% - 13px),
+        #000 calc(100% - 12px),
+        transparent calc(100% - 11px)
+      );
+    }
+
+    .dial-handle {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 0;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 8px rgba(155, 178, 143, 0.09);
+      transform: translate(-50%, -50%);
+      touch-action: none;
+      cursor: grab;
+      z-index: 1;
+    }
+
+    .dial-handle:active {
+      background: var(--accent);
+      border: 0;
+      transform: translate(-50%, -50%) scale(1.12);
+      cursor: grabbing;
+    }
+
+    .dial.dragging .dial-handle {
+      box-shadow: 0 0 0 11px rgba(155, 178, 143, 0.16);
+    }
+
+    .timer {
+      font-size: clamp(58px, 17vw, 76px);
+      line-height: 1;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      margin: 0;
+      direction: ltr;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .duration-actions {
+      min-height: 104px;
+      margin-bottom: 19px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 15px 20px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface-soft);
+      cursor: pointer;
+      transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+    }
+
+    button:active {
+      background: #28312d;
+      border-color: rgba(242, 238, 230, 0.15);
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.36;
+      cursor: default;
+    }
+
+    button:disabled:active {
+      background: var(--surface-soft);
+      border-color: var(--line);
+      transform: none;
+    }
+
+    .controls button {
+      min-width: 108px;
+    }
+
+    .close {
+      width: 100%;
+      background: transparent;
+      border-color: rgba(215, 136, 123, 0.18);
+      color: #caa49b;
+      font-size: 14px;
+      margin-top: auto;
+    }
+
+    .install {
+      width: 100%;
+      background: var(--accent-soft);
+      border-color: rgba(155, 178, 143, 0.22);
+      color: #d7dfd3;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .notification {
+      width: 100%;
+      background: var(--accent-soft);
+      border-color: rgba(155, 178, 143, 0.22);
+      color: #d7dfd3;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .hint {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-height: 650px) {
+      .app { min-height: auto; }
+      .status { margin-top: 18px; }
+      .dial { min-height: 205px; width: min(218px, 62vw); margin-bottom: 18px; }
+      .duration-actions { min-height: 98px; margin-bottom: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>QUICK TIMER</span>
+    </header>
+    <div id="status" class="status"></div>
+    <div id="dial" class="dial">
+      <button id="dialHandle" class="dial-handle" aria-label="Set duration" aria-valuemin="30" aria-valuemax="3600" role="slider" type="button"></button>
+      <div id="timer" class="timer">03:00</div>
+    </div>
+
+    <div class="duration-actions">
+      <div class="controls">
+        <button id="minusBtn">- 30 s</button>
+        <button id="plusBtn">+ 30 s</button>
+      </div>
+      <button id="saveDefaultBtn" class="install" style="display:none;"></button>
+    </div>
+
+    <button id="closeBtn" class="close">Stop</button>
+    <button id="notificationBtn" class="notification">Enable alerts</button>
+    <button id="exactAlarmBtn" class="notification">Enable precise alerts</button>
+    <button id="installBtn" class="install">Install app</button>
+  </main>
+
+  <script>
+    const DEFAULT_SECONDS = 3 * 60;
+    const STEP_SECONDS = 30;
+    const MIN_SECONDS = 30;
+    const MAX_SECONDS = 60 * 60;
+    const DIAL_START_ANGLE = Math.PI / 18;
+    const DIAL_END_ANGLE = (Math.PI * 35) / 18;
+    const DIAL_ACTIVE_ANGLE = DIAL_END_ANGLE - DIAL_START_ANGLE;
+    const DIAL_VALUE_INTERVALS = (MAX_SECONDS - MIN_SECONDS) / STEP_SECONDS;
+    const STORAGE_KEY = 'timer-default-seconds';
+    const ACTIVE_TIMER_KEY = 'timer-active-end-time';
+    const COMPLETED_TIMER_KEY = 'timer-completed';
+    const TIMER_NOTIFICATION_ID = 1001;
+    const END_SEQUENCE_REPEAT_COUNT = 3;
+    const END_SEQUENCE_GAP_MS = 500;
+    const END_SEQUENCE_STEP_MS = 560;
+    const END_SEQUENCE_DURATION_MS = 1700;
+    const CLOSE_AFTER_COMPLETION_MS =
+      (END_SEQUENCE_REPEAT_COUNT * END_SEQUENCE_DURATION_MS) +
+      ((END_SEQUENCE_REPEAT_COUNT - 1) * END_SEQUENCE_GAP_MS) +
+      500;
+
+    function loadDefaultSeconds() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        const value = stored !== null ? parseInt(stored, 10) : NaN;
+        if (!Number.isNaN(value)) {
+          return Math.min(MAX_SECONDS, Math.max(MIN_SECONDS, value));
+        }
+      } catch (e) {
+        // localStorage may be unavailable in some environments.
+      }
+      return DEFAULT_SECONDS;
+    }
+
+    let defaultSeconds = loadDefaultSeconds();
+    let selectedSeconds = defaultSeconds;
+    let remainingSeconds = defaultSeconds;
+    let intervalId = null;
+    let audioContext = null;
+    let keepAliveOscillator = null;
+    let keepAliveGain = null;
+    let deferredInstallPrompt = null;
+    let timerEnded = false;
+    let endTime = null;
+    let wakeLock = null;
+    let isRunning = false;
+    let completionHandled = false;
+    let timerUsesNativeAlarm = false;
+    let isDraggingDial = false;
+    let dialGapLock = null;
+
+    const timerEl = document.getElementById('timer');
+    const dialEl = document.getElementById('dial');
+    const dialHandleEl = document.getElementById('dialHandle');
+    const statusEl = document.getElementById('status');
+    const saveDefaultBtn = document.getElementById('saveDefaultBtn');
+    const minusBtn = document.getElementById('minusBtn');
+    const plusBtn = document.getElementById('plusBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const notificationBtn = document.getElementById('notificationBtn');
+    const exactAlarmBtn = document.getElementById('exactAlarmBtn');
+    const installBtn = document.getElementById('installBtn');
+
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      timerEl.textContent = formatTime(remainingSeconds);
+      minusBtn.disabled = selectedSeconds <= MIN_SECONDS;
+      plusBtn.disabled = selectedSeconds >= MAX_SECONDS;
+      updateDialHandle();
+    }
+
+    function angleForDuration(seconds) {
+      const progress = (seconds - MIN_SECONDS) / (MAX_SECONDS - MIN_SECONDS);
+      return DIAL_START_ANGLE + (progress * DIAL_ACTIVE_ANGLE);
+    }
+
+    function updateDialHandle() {
+      const radius = (Math.min(dialEl.clientWidth, dialEl.clientHeight) / 2) - 12.5;
+      const angle = angleForDuration(selectedSeconds);
+      dialHandleEl.style.left = `${(dialEl.clientWidth / 2) + Math.sin(angle) * radius}px`;
+      dialHandleEl.style.top = `${(dialEl.clientHeight / 2) - Math.cos(angle) * radius}px`;
+      dialHandleEl.setAttribute('aria-valuenow', String(selectedSeconds));
+      dialHandleEl.setAttribute('aria-valuetext', formatTime(selectedSeconds));
+    }
+
+    function setButtonsState(running) {
+      plusBtn.style.display = running ? 'inline-flex' : 'none';
+      minusBtn.style.display = running ? 'inline-flex' : 'none';
+    }
+
+    function updateSaveButtonLabel() {
+      saveDefaultBtn.textContent = `Set ${formatTime(selectedSeconds)} as default`;
+    }
+
+    function updateSaveButtonVisibility() {
+      const show = selectedSeconds !== defaultSeconds;
+      saveDefaultBtn.style.display = show ? 'block' : 'none';
+      if (show) updateSaveButtonLabel();
+    }
+
+    function durationFromPointer(event) {
+      const rect = dialEl.getBoundingClientRect();
+      const centerX = rect.left + (rect.width / 2);
+      const centerY = rect.top + (rect.height / 2);
+      let angle = Math.atan2(event.clientX - centerX, centerY - event.clientY);
+      if (angle < 0) angle += Math.PI * 2;
+
+      const insideGap = angle < DIAL_START_ANGLE || angle > DIAL_END_ANGLE;
+      if (insideGap) {
+        if (dialGapLock === null) {
+          dialGapLock = selectedSeconds <= ((MIN_SECONDS + MAX_SECONDS) / 2)
+            ? MIN_SECONDS
+            : MAX_SECONDS;
+        }
+        return dialGapLock;
+      }
+
+      if (dialGapLock === MIN_SECONDS) {
+        if (angle > (Math.PI / 2)) return MIN_SECONDS;
+        dialGapLock = null;
+      } else if (dialGapLock === MAX_SECONDS) {
+        if (angle < ((Math.PI * 3) / 2)) return MAX_SECONDS;
+        dialGapLock = null;
+      }
+
+      const progress = (angle - DIAL_START_ANGLE) / DIAL_ACTIVE_ANGLE;
+      const interval = Math.round(progress * DIAL_VALUE_INTERVALS);
+      return MIN_SECONDS + (interval * STEP_SECONDS);
+    }
+
+    function previewDialDuration(event) {
+      selectedSeconds = durationFromPointer(event);
+      remainingSeconds = selectedSeconds;
+      statusEl.textContent = '';
+      updateDisplay();
+      updateSaveButtonVisibility();
+    }
+
+    function applySelectedDuration() {
+      startTimer(false);
+    }
+
+    function saveActiveTimer() {
+      try {
+        localStorage.setItem(ACTIVE_TIMER_KEY, JSON.stringify({
+          endTime,
+          selectedSeconds,
+          timerUsesNativeAlarm,
+        }));
+      } catch (e) {}
+    }
+
+    function clearActiveTimer() {
+      try {
+        localStorage.removeItem(ACTIVE_TIMER_KEY);
+      } catch (e) {}
+    }
+
+    function getLocalNotifications() {
+      return window.Capacitor && window.Capacitor.Plugins
+        ? window.Capacitor.Plugins.LocalNotifications
+        : null;
+    }
+
+    function getCapacitorApp() {
+      return window.Capacitor && window.Capacitor.Plugins
+        ? window.Capacitor.Plugins.App
+        : null;
+    }
+
+    function hasNativeTimerAlarm() {
+      return window.NativeClose && typeof window.NativeClose.scheduleTimerAlarm === 'function';
+    }
+
+    function consumeNativeTimerAlarmFired() {
+      if (!window.NativeClose || typeof window.NativeClose.consumeTimerAlarmFired !== 'function') {
+        return false;
+      }
+      try {
+        return window.NativeClose.consumeTimerAlarmFired();
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function markTimerCompleted() {
+      try {
+        localStorage.setItem(COMPLETED_TIMER_KEY, '1');
+      } catch (e) {}
+    }
+
+    function consumeTimerCompleted() {
+      try {
+        const completed = localStorage.getItem(COMPLETED_TIMER_KEY) === '1';
+        if (completed) localStorage.removeItem(COMPLETED_TIMER_KEY);
+        return completed;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function updateNotificationButton() {
+      if (!notificationBtn) return;
+      const localNotifications = getLocalNotifications();
+      if (localNotifications) {
+        try {
+          const permissions = await localNotifications.checkPermissions();
+          notificationBtn.style.display = permissions.display === 'granted' ? 'none' : 'block';
+        } catch (e) {
+          notificationBtn.style.display = 'block';
+        }
+        return;
+      }
+      if (!('Notification' in window)) return;
+      notificationBtn.style.display = Notification.permission === 'default' ? 'block' : 'none';
+    }
+
+    async function updateExactAlarmButton() {
+      if (!exactAlarmBtn) return;
+      const localNotifications = getLocalNotifications();
+      if (!localNotifications || typeof localNotifications.checkExactNotificationSetting !== 'function') {
+        exactAlarmBtn.style.display = 'none';
+        return;
+      }
+
+      try {
+        const setting = await localNotifications.checkExactNotificationSetting();
+        exactAlarmBtn.style.display = setting.exact_alarm === 'granted' ? 'none' : 'block';
+      } catch (e) {
+        exactAlarmBtn.style.display = 'none';
+      }
+    }
+
+    function updateAlertPermissionButtons() {
+      updateNotificationButton();
+      updateExactAlarmButton();
+    }
+
+    async function requestNotificationPermission() {
+      const localNotifications = getLocalNotifications();
+      if (localNotifications) {
+        try {
+          const permissions = await localNotifications.requestPermissions();
+          if (permissions.display === 'granted' && isRunning) {
+            scheduleNativeNotification();
+          }
+        } catch (e) {}
+        updateAlertPermissionButtons();
+        return;
+      }
+
+      if (!('Notification' in window)) return;
+      try {
+        await Notification.requestPermission();
+      } catch (e) {}
+      updateNotificationButton();
+    }
+
+    async function requestExactAlarmPermission() {
+      const localNotifications = getLocalNotifications();
+      if (!localNotifications || typeof localNotifications.changeExactNotificationSetting !== 'function') return;
+
+      try {
+        await localNotifications.changeExactNotificationSetting();
+      } catch (e) {}
+      updateExactAlarmButton();
+      if (isRunning) {
+        scheduleNativeNotification();
+      }
+    }
+
+    async function scheduleNativeNotification() {
+      if (!endTime || !isRunning || timerEnded || endTime <= Date.now()) return;
+
+      if (hasNativeTimerAlarm()) {
+        try {
+          timerUsesNativeAlarm = window.NativeClose.scheduleTimerAlarm(endTime);
+          if (timerUsesNativeAlarm) {
+            return;
+          }
+        } catch (e) {
+          timerUsesNativeAlarm = false;
+        }
+      }
+
+      const localNotifications = getLocalNotifications();
+      if (!localNotifications) return;
+
+      try {
+        const permissions = await localNotifications.checkPermissions();
+        if (permissions.display !== 'granted') return;
+
+        await localNotifications.cancel({
+          notifications: [{ id: TIMER_NOTIFICATION_ID }],
+        });
+        await localNotifications.schedule({
+          notifications: [{
+            id: TIMER_NOTIFICATION_ID,
+            title: 'Timer finished',
+            body: 'Time is up',
+            schedule: {
+              at: new Date(endTime),
+              allowWhileIdle: true,
+            },
+          }],
+        });
+      } catch (e) {}
+    }
+
+    async function cancelNativeNotification(cancelNativeAlarm = true) {
+      if (cancelNativeAlarm && window.NativeClose && typeof window.NativeClose.cancelTimerAlarm === 'function') {
+        try {
+          window.NativeClose.cancelTimerAlarm();
+        } catch (e) {}
+      }
+
+      const localNotifications = getLocalNotifications();
+      if (!localNotifications) return;
+
+      try {
+        await localNotifications.cancel({
+          notifications: [{ id: TIMER_NOTIFICATION_ID }],
+        });
+      } catch (e) {}
+    }
+
+    function getAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioContext;
+    }
+
+    function startKeepAliveAudio() {
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+        if (keepAliveOscillator) return;
+
+        keepAliveGain = ctx.createGain();
+        keepAliveGain.gain.setValueAtTime(0.00001, ctx.currentTime);
+        keepAliveGain.connect(ctx.destination);
+
+        keepAliveOscillator = ctx.createOscillator();
+        keepAliveOscillator.type = 'sine';
+        keepAliveOscillator.frequency.setValueAtTime(20, ctx.currentTime);
+        keepAliveOscillator.connect(keepAliveGain);
+        keepAliveOscillator.start();
+      } catch (e) {
+        keepAliveOscillator = null;
+        keepAliveGain = null;
+      }
+    }
+
+    function stopKeepAliveAudio() {
+      try {
+        if (keepAliveOscillator) {
+          keepAliveOscillator.stop();
+          keepAliveOscillator.disconnect();
+        }
+        if (keepAliveGain) {
+          keepAliveGain.disconnect();
+        }
+      } catch (e) {}
+
+      keepAliveOscillator = null;
+      keepAliveGain = null;
+    }
+
+    function playGling(type = 'start') {
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(type === 'end' ? 1 : 0.25, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+        const notes = type === 'end'
+          ? [880, 1174, 1568]
+          : [784, 1046];
+
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.11);
+          osc.connect(gain);
+          osc.start(now + i * 0.11);
+          osc.stop(now + i * 0.11 + 0.26);
+        });
+      } catch (e) {
+        // Some browsers block sound before user interaction. The timer still works.
+      }
+    }
+
+    function maximizeAlertVolume() {
+      if (window.NativeClose && typeof window.NativeClose.maximizeMediaVolume === 'function') {
+        try {
+          window.NativeClose.maximizeMediaVolume();
+        } catch (e) {}
+      }
+    }
+
+    function playEndSequence() {
+      maximizeAlertVolume();
+      for (let sequence = 0; sequence < END_SEQUENCE_REPEAT_COUNT; sequence++) {
+        const sequenceOffset = sequence * (END_SEQUENCE_DURATION_MS + END_SEQUENCE_GAP_MS);
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            playGling('end');
+            if (navigator.vibrate) {
+              navigator.vibrate([120, 60, 120]);
+            }
+          }, sequenceOffset + (i * END_SEQUENCE_STEP_MS));
+        }
+      }
+    }
+
+    async function requestWakeLock() {
+      if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+      try {
+        if (wakeLock) return;
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          if (isRunning && !timerEnded && document.visibilityState === 'visible') {
+            setTimeout(requestWakeLock, 250);
+          }
+        });
+      } catch (e) {
+        wakeLock = null;
+      }
+    }
+
+    function releaseWakeLock() {
+      if (!wakeLock) return;
+      wakeLock.release().catch(() => {});
+      wakeLock = null;
+    }
+
+    function sendTimerNotification() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+      try {
+        new Notification('Timer finished', {
+          body: 'Time is up',
+          silent: false,
+        });
+      } catch (e) {
+        // Ignore notification failures.
+      }
+    }
+
+    function vibrate(pattern) {
+      if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    }
+
+    function closeAppAfterCompletion(delayMs = 2400) {
+      setTimeout(async () => {
+        if (window.NativeClose && typeof window.NativeClose.finishAndRemoveTask === 'function') {
+          try {
+            window.NativeClose.finishAndRemoveTask();
+            return;
+          } catch (e) {}
+        }
+
+        const capacitorApp = getCapacitorApp();
+        if (capacitorApp && typeof capacitorApp.exitApp === 'function') {
+          try {
+            await capacitorApp.exitApp();
+            return;
+          } catch (e) {}
+        }
+
+        try {
+          window.close();
+        } catch (e) {}
+
+        document.body.innerHTML = `
+          <main class="app">
+            <h1>Timer finished</h1>
+            <div class="status">You can close this window.</div>
+          </main>
+        `;
+      }, delayMs);
+    }
+
+    function tickTimer() {
+      remainingSeconds = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+      updateDisplay();
+
+      if (remainingSeconds <= 0) {
+        completeTimer();
+      }
+    }
+
+    function completeTimer() {
+      if (completionHandled) return;
+      completionHandled = true;
+      isRunning = false;
+      clearInterval(intervalId);
+      clearActiveTimer();
+      cancelNativeNotification(!timerUsesNativeAlarm);
+      timerEnded = true;
+      remainingSeconds = 0;
+      updateDisplay();
+      statusEl.textContent = 'DONE';
+      setButtonsState(false);
+      stopKeepAliveAudio();
+      releaseWakeLock();
+      if (!timerUsesNativeAlarm) {
+        playEndSequence();
+        sendTimerNotification();
+        markTimerCompleted();
+      }
+      closeAppAfterCompletion(CLOSE_AFTER_COMPLETION_MS);
+      return;
+
+      setTimeout(() => {
+        try {
+          window.close();
+        } catch (e) {}
+
+        document.body.innerHTML = `
+          <main class="app">
+            <h1>Timer finished</h1>
+            <div class="status">You can close this window.</div>
+          </main>
+        `;
+      }, 2400);
+    }
+
+    function startTimer(playSound = true) {
+      timerEnded = false;
+      completionHandled = false;
+      isRunning = true;
+      timerUsesNativeAlarm = false;
+      clearInterval(intervalId);
+      requestWakeLock();
+      startKeepAliveAudio();
+      endTime = Date.now() + selectedSeconds * 1000;
+      remainingSeconds = selectedSeconds;
+      scheduleNativeNotification();
+      saveActiveTimer();
+      updateAlertPermissionButtons();
+      updateDisplay();
+      statusEl.textContent = '';
+      setButtonsState(true);
+      updateSaveButtonVisibility();
+
+      if (playSound) {
+        playGling('start');
+        vibrate(100);
+      }
+
+      intervalId = setInterval(() => {
+        tickTimer();
+
+        if (false && remainingSeconds <= 0) {
+          clearInterval(intervalId);
+          timerEnded = true;
+          statusEl.textContent = 'DONE';
+          setButtonsState(false);
+          playEndSequence();
+          releaseWakeLock();
+          sendTimerNotification();
+
+          setTimeout(() => {
+            try {
+              window.close();
+            } catch (e) {}
+
+            document.body.innerHTML = `
+              <main class="app">
+                <h1>Timer finished</h1>
+                <div class="status">You can close this window.</div>
+              </main>
+            `;
+          }, 2400);
+        }
+      }, 100);
+    }
+
+    plusBtn.addEventListener('click', () => {
+      if (timerEnded) return;
+      selectedSeconds = Math.min(MAX_SECONDS, selectedSeconds + STEP_SECONDS);
+      updateSaveButtonVisibility();
+      applySelectedDuration();
+    });
+
+    minusBtn.addEventListener('click', () => {
+      if (timerEnded) return;
+      selectedSeconds = Math.max(MIN_SECONDS, selectedSeconds - STEP_SECONDS);
+      updateSaveButtonVisibility();
+      applySelectedDuration();
+    });
+
+    dialHandleEl.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      isDraggingDial = true;
+      dialGapLock = null;
+      dialEl.classList.add('dragging');
+      dialHandleEl.setPointerCapture(event.pointerId);
+      clearInterval(intervalId);
+      previewDialDuration(event);
+    });
+
+    dialHandleEl.addEventListener('pointermove', (event) => {
+      if (!isDraggingDial) return;
+      event.preventDefault();
+      previewDialDuration(event);
+    });
+
+    function finishDialDrag(event) {
+      if (!isDraggingDial) return;
+      event.preventDefault();
+      isDraggingDial = false;
+      dialGapLock = null;
+      dialEl.classList.remove('dragging');
+      if (dialHandleEl.hasPointerCapture(event.pointerId)) {
+        dialHandleEl.releasePointerCapture(event.pointerId);
+      }
+      applySelectedDuration();
+    }
+
+    dialHandleEl.addEventListener('pointerup', finishDialDrag);
+    dialHandleEl.addEventListener('pointercancel', finishDialDrag);
+    dialHandleEl.addEventListener('keydown', (event) => {
+      const direction = event.key === 'ArrowRight' || event.key === 'ArrowUp'
+        ? 1
+        : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+          ? -1
+          : 0;
+      if (!direction) return;
+      event.preventDefault();
+      selectedSeconds = Math.min(MAX_SECONDS, Math.max(MIN_SECONDS, selectedSeconds + (direction * STEP_SECONDS)));
+      remainingSeconds = selectedSeconds;
+      updateDisplay();
+      updateSaveButtonVisibility();
+      applySelectedDuration();
+    });
+
+    saveDefaultBtn.addEventListener('click', () => {
+      defaultSeconds = selectedSeconds;
+      try {
+        localStorage.setItem(STORAGE_KEY, String(defaultSeconds));
+      } catch (e) {}
+      updateSaveButtonVisibility();
+    });
+
+    if (notificationBtn) {
+      notificationBtn.addEventListener('click', () => {
+        requestNotificationPermission();
+      });
+    }
+
+    if (exactAlarmBtn) {
+      exactAlarmBtn.addEventListener('click', () => {
+        requestExactAlarmPermission();
+      });
+    }
+
+    closeBtn.addEventListener('click', async () => {
+      isRunning = false;
+      clearActiveTimer();
+      cancelNativeNotification();
+      clearInterval(intervalId);
+      stopKeepAliveAudio();
+      releaseWakeLock();
+
+      if (window.NativeClose && typeof window.NativeClose.finishAndRemoveTask === 'function') {
+        try {
+          window.NativeClose.finishAndRemoveTask();
+          return;
+        } catch (e) {}
+      }
+
+      const capacitorApp = getCapacitorApp();
+      if (capacitorApp && typeof capacitorApp.exitApp === 'function') {
+        try {
+          await capacitorApp.exitApp();
+          return;
+        } catch (e) {}
+      }
+
+      try {
+        window.close();
+      } catch (e) {}
+
+      document.body.innerHTML = `
+        <main class="app">
+          <h1>Stopped</h1>
+          <div class="status">You can close this window.</div>
+        </main>
+      `;
+    });
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+
+    function syncRunningTimer() {
+      if (!isRunning || timerEnded) return;
+      requestWakeLock();
+      startKeepAliveAudio();
+      if (endTime <= Date.now() && timerUsesNativeAlarm && consumeNativeTimerAlarmFired()) {
+        completeTimer();
+        return;
+      }
+      tickTimer();
+      scheduleNativeNotification();
+      updateAlertPermissionButtons();
+    }
+
+    function restoreActiveTimer() {
+      let saved = null;
+      try {
+        saved = JSON.parse(localStorage.getItem(ACTIVE_TIMER_KEY));
+      } catch (e) {}
+
+      if (!saved || typeof saved.endTime !== 'number') return false;
+
+      endTime = Math.min(saved.endTime, Date.now() + (MAX_SECONDS * 1000));
+      selectedSeconds = Math.min(
+        MAX_SECONDS,
+        Math.max(MIN_SECONDS, Number(saved.selectedSeconds) || defaultSeconds)
+      );
+      timerUsesNativeAlarm = saved.timerUsesNativeAlarm === true;
+      remainingSeconds = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+      timerEnded = false;
+      completionHandled = false;
+      isRunning = true;
+      updateDisplay();
+      statusEl.textContent = '';
+      setButtonsState(true);
+      updateSaveButtonVisibility();
+      requestWakeLock();
+      startKeepAliveAudio();
+
+      if (remainingSeconds <= 0) {
+        completeTimer();
+      } else {
+        clearInterval(intervalId);
+        intervalId = setInterval(() => {
+          tickTimer();
+        }, 100);
+      }
+
+      return true;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncRunningTimer();
+      }
+    });
+
+    window.addEventListener('pageshow', syncRunningTimer);
+    window.addEventListener('focus', syncRunningTimer);
+    window.addEventListener('resize', updateDialHandle);
+
+    ['click', 'touchstart'].forEach((eventName) => {
+      window.addEventListener(eventName, () => {
+        if (!isRunning || timerEnded) return;
+        requestWakeLock();
+        startKeepAliveAudio();
+        updateAlertPermissionButtons();
+      }, { passive: true });
+    });
+
+    updateDisplay();
+    updateAlertPermissionButtons();
+    window.addEventListener('load', () => {
+      updateAlertPermissionButtons();
+      if (consumeTimerCompleted()) {
+        selectedSeconds = defaultSeconds;
+        remainingSeconds = defaultSeconds;
+        timerEnded = false;
+        completionHandled = false;
+        isRunning = false;
+        clearActiveTimer();
+        updateDisplay();
+        statusEl.textContent = '';
+        updateSaveButtonVisibility();
+        startTimer(true);
+        requestNotificationPermission();
+        return;
+      }
+
+      if (!restoreActiveTimer()) {
+        startTimer(true);
+      }
+      requestNotificationPermission();
+    });
+  </script>
+</body>
+</html>
