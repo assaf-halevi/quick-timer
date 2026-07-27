@@ -56,6 +56,21 @@
       font: 12px/1.55 Consolas, "Courier New", monospace;
       white-space: pre-wrap;
     }
+
+    body.embedded {
+      padding: 18px 0 32px;
+      background: transparent;
+    }
+
+    body.embedded main {
+      width: 100%;
+      padding: 0 18px;
+    }
+
+    body.embedded h1 {
+      font-size: clamp(1.55rem, 8vw, 1.9rem);
+      line-height: 1.15;
+    }
   </style>
 </head>
 <body>
@@ -71,6 +86,17 @@
 
     <h2>Capacitor App and Capacitor Local Notifications</h2>
     <p>Copyright 2020-present Ionic</p>
+
+    <h2>Android and Java runtime components</h2>
+    <p>
+      The app also includes AndroidX libraries, Apache Cordova Android,
+      Kotlin standard libraries, Kotlin coroutines, JetBrains annotations,
+      and Guava ListenableFuture. These components are distributed under the
+      Apache License 2.0.
+    </p>
+    <p>
+      <a href="apache-license-2.0.txt">Read the full Apache License 2.0</a>
+    </p>
 
     <h2>MIT License</h2>
     <pre>Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -91,5 +117,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.</pre>
   </main>
+  <script>
+    if (window.self !== window.top) document.body.classList.add('embedded');
+  </script>
 </body>
 </html>
